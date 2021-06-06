@@ -1,16 +1,17 @@
+import os
+
 from socket import socket
 
 from http_parser import HttpParser
-from http_status import INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, ACCESS_DENIED
-from response import Response
+from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, ACCESS_DENIED
 
 
 class ConnectionHandler:
 
     def __init__(self):
         # TODO: replace with config options
-        self.resources = "C:\\Users\\Isaiah\\PycharmProjects\\ym-http\\resources\\"
-        self.error_pages = "C:\\Users\\Isaiah\\PycharmProjects\\ym-http\\resources\\error_pages\\"
+        self.resources = os.path.dirname(os.path.abspath(__file__)) + "\\resources\\"
+        self.error_pages = self.resources + "error_pages\\"
 
     def get(self, path) -> Response:
         raise NotImplemented
