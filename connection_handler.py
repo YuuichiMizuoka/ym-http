@@ -1,7 +1,8 @@
 from socket import socket
 
 from http_parser import HttpParser
-from response import Response, HttpStatus
+from http_status import INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, ACCESS_DENIED
+from response import Response
 
 
 class ConnectionHandler:
@@ -15,7 +16,7 @@ class ConnectionHandler:
         raise NotImplemented
 
     def e_500(self) -> Response:
-        return Response(b'Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR)
+        return Response(b'Internal Server Error', INTERNAL_SERVER_ERROR)
 
     def e_405(self) -> Response:
         raise NotImplemented
@@ -35,7 +36,7 @@ class ConnectionHandler:
             except PermissionError:
                 return self.e_401()
         elif method == "ENKY":
-            return Response(b'x3', HttpStatus.OK)
+            return Response(b'x3', OK)
         else:
             return self.e_405()
 
@@ -50,24 +51,30 @@ class ConnectionHandler:
         finally:
             connection.close()
 
+    def startup_message(self):
+        pass
+
 
 class DefaultConnectionHandler(ConnectionHandler):
 
-    def __init__(self):
+    def __init__(self, home_path):
         super().__init__()
-        self.home_path = "C:\\Users\\Isaiah\\Desktop\\http\\"
+        self.home_path = home_path
 
     def e_405(self) -> Response:
-        return Response(open(self.error_pages + "405.html", 'rb').read(), HttpStatus.METHOD_NOT_ALLOWED)
+        return Response(open(self.error_pages + "405.html", 'rb').read(), METHOD_NOT_ALLOWED)
 
     def e_404(self) -> Response:
-        return Response(open(self.error_pages + "404.html", 'rb').read(), HttpStatus.NOT_FOUND)
+        return Response(open(self.error_pages + "404.html", 'rb').read(), NOT_FOUND)
 
     def e_401(self) -> Response:
-        return Response(open(self.error_pages + "401.html", 'rb').read(), HttpStatus.ACCESS_DENIED)
+        return Response(open(self.error_pages + "401.html", 'rb').read(), ACCESS_DENIED)
 
     def get(self, path) -> Response:
         if path == "/":
             path = 'index.html'
-        
-        return Response(open(self.home_path + path, 'rb').read(), HttpStatus.OK)
+
+        return Response(open(self.home_path + path, 'rb').read(), OK)
+
+    def startup_message(self):
+        print("delivering static content from " + self.home_path)
