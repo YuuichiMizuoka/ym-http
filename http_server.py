@@ -21,8 +21,8 @@ class HttpServer:
 
         print("serving ym-http on {}:{}".format(self.server_address[0], self.server_address[1]))
         self.connection_handler.startup_message()
-        
+
         # main connection loop TODO: add some simple threading
         while True:
-            connection, client_addr = sock.accept()
-            self.connection_handler.handle_connection(connection, client_addr)
+            connection, client_address = sock.accept()
+            self.connection_handler.handle_connection(connection, client_address)
