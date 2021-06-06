@@ -1,4 +1,5 @@
 PROTOCOL = 'HTTP/1.1'
+SP = " "
 
 
 class HttpStatus:
@@ -16,7 +17,7 @@ class Response:
         self.status = status
 
     def to_bytes(self) -> bytes:
-        preamble = bytes(PROTOCOL + str(self.status.status_code) + " " + self.status.reason_message, 'UTF-8')
+        preamble = bytes(PROTOCOL + SP + str(self.status.status_code) + SP + self.status.reason_message, 'UTF-8')
         return preamble + b'\r\n' + self.headers + b'\r\n' + self.body
 
 

@@ -1,5 +1,4 @@
 import os
-
 from socket import socket
 
 from http_parser import HttpParser
