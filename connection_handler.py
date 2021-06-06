@@ -44,7 +44,10 @@ class ConnectionHandler:
         try:
             data = connection.recv(2500).decode('utf-8')
             method, path, protocol, headers = HttpParser.parse_http_request(data)
-            connection.send(self.evaluate(method, path).to_bytes())
+            response = self.evaluate(method, path)
+
+            print("{} {} {} ({})".format(client_address, method, path, response.status.status_code))
+            connection.send(response.to_bytes())
         except Exception as e:  # TODO: find good exceptions
             print(e)
             connection.send(self.e_500().to_bytes())
