@@ -8,7 +8,7 @@ I just wanted to try writing my own http server to learn more about the http pro
 `python main.py` (Start the HTTP server delivering the http folder inside the project structure)
 `python main.py [folder to be served]` (Start the HTTP server delivering the given folder)
 
-### TODO (maybe)
+## TODO (maybe)
 Some things i would still like to experiment with in the future are:
 - more robust http parsing and error handling
 - more robust handling of the tcp/ip socket (dynamic package sizes, streaming, etc...)
