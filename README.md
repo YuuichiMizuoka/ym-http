@@ -22,11 +22,11 @@ I just wanted to try writing my own http server to learn more about the http pro
 
 Some things that would be fun to experiment with in the future:
 
-- more robust http parsing and error handling
-- more robust handling of the tcp/ip socket (dynamic package sizes, streaming, etc...)
+- more robust http parsing and error handling (somewhat implemented)
+- more robust handling of the tcp/ip socket (dynamic package sizes, streaming, etc...) (with GET supported)
 - basic header support (basically just to return any header, instead of the current none)
-- config files
-- basic auth
+- config files (simple 'deliver folder x at path y' for now, maybe a simple reverse proxy later, \<static\> \<reverse\>)
+- basic auth (maybe .htaccess like?)
 - threading
-- Content-Type Header
+- Content-Type Header (how do you find out what encoding a file has, oh god)
 - Range Header (useful when trying to download big files or for streaming video)

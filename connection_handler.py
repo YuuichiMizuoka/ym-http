@@ -2,7 +2,7 @@ import os
 from socket import socket
 
 from helpers import HttpParser, SocketHelper
-from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, ACCESS_DENIED
+from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, NOT_AUTHORIZED
 
 
 class ConnectionHandler:
@@ -79,7 +79,7 @@ class DefaultConnectionHandler(ConnectionHandler):
         return Response(NOT_FOUND, open(self.error_pages + "404.html", 'rb').read())
 
     def e_401(self) -> Response:
-        return Response(ACCESS_DENIED, open(self.error_pages + "401.html", 'rb').read())
+        return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read())
 
     def get(self, path, headers) -> Response:
         # TODO: range header

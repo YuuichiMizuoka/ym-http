@@ -11,8 +11,8 @@ class HttpStatus:
 
 class Response:
 
-    def __init__(self, status: HttpStatus, body: bytes = b''):
-        self.headers = b'Server: ym-http\r\nContent-Type: text/plain;charset=utf-8\r\n'
+    def __init__(self, status: HttpStatus, body: bytes = b'', headers: bytes = b'Server: ym-http\r\n'):
+        self.headers = headers
         self.body = body
         self.status = status
 
@@ -24,7 +24,8 @@ class Response:
 # HTTP STATUS CODES
 OK = HttpStatus(200, "OK")
 
-ACCESS_DENIED = HttpStatus(401, "Access Denied")
+NOT_AUTHORIZED = HttpStatus(401, "Not Authorized")
+FORBIDDEN = HttpStatus(403, "Forbidden")
 NOT_FOUND = HttpStatus(404, "Not Found")
 METHOD_NOT_ALLOWED = HttpStatus(405, "Method Not Allowed")
 
