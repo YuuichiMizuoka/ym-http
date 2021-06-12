@@ -57,7 +57,7 @@ class ConnectionHandler:
         preamble = SocketHelper.receive_until_char_sequence(connection, b'\r\n', self.max_body)
         method, path, protocol = HttpParser.parse_preamble(preamble)
 
-        headers = SocketHelper.receive_until_char_sequence(connection, b'\r\n\r\n', self.max_body)
+        headers = SocketHelper.receive_until_char_sequence(connection, b'\r\n\r\n', self.max_body - len(preamble))
         header_map = HttpParser.parse_headers(headers)
 
         return method, path, header_map
