@@ -32,7 +32,8 @@ class ConnectionHandler:
         if method == "GET":
             try:
                 return self.get(path, headers)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                print(e)
                 return self.e_404()
             except PermissionError:
                 return self.e_401()
@@ -53,10 +54,10 @@ class ConnectionHandler:
             connection.close()
 
     def receive_next_http_request(self, connection: socket):
-        preamble = SocketHelper.receive_until_char_sequence(connection, '\r\n', self.max_body)
+        preamble = SocketHelper.receive_until_char_sequence(connection, b'\r\n', self.max_body)
         method, path, protocol = HttpParser.parse_preamble(preamble)
 
-        headers = SocketHelper.receive_until_char_sequence(connection, '\r\n\r\n', self.max_body)
+        headers = SocketHelper.receive_until_char_sequence(connection, b'\r\n\r\n', self.max_body)
         header_map = HttpParser.parse_headers(headers)
 
         return method, path, header_map
@@ -81,6 +82,8 @@ class DefaultConnectionHandler(ConnectionHandler):
         return Response(ACCESS_DENIED, open(self.error_pages + "401.html", 'rb').read())
 
     def get(self, path, headers) -> Response:
+        # TODO: range header
+        # TODO: .htaccess
         if path == "/":
             path = 'index.html'
 

@@ -4,9 +4,9 @@ from socket import socket
 class HttpParser:
 
     @staticmethod
-    def parse_preamble(preamble: str):
+    def parse_preamble(preamble):
         if preamble is None:
-            raise
+            raise ValueError("http preamble is empty")
 
         sp_preamble = preamble.split(' ')
         if len(sp_preamble) != 3:
@@ -25,11 +25,11 @@ class HttpParser:
 class SocketHelper:
 
     @staticmethod
-    def receive_until_char_sequence(connection: socket, seq: str, max_length: int):
-        data = ""
+    def receive_until_char_sequence(connection: socket, seq: bytes, max_length: int):
+        data = b''
         cnt = 0
         while True:
-            data += connection.recv(1).decode('utf-8')
+            data += connection.recv(1)
             cnt += 1
 
             if seq in data:
@@ -38,8 +38,8 @@ class SocketHelper:
             if cnt > max_length:
                 break
 
-        data.replace(seq, '')
-        return data
+        data.replace(seq, b'')
+        return data.decode('utf-8')
 
     @staticmethod
     def parse_headers(headers):

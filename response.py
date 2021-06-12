@@ -12,7 +12,7 @@ class HttpStatus:
 class Response:
 
     def __init__(self, status: HttpStatus, body: bytes = b''):
-        self.headers = b'Server: ym-http\r\n'
+        self.headers = b'Server: ym-http\r\nContent-Type: text/plain;charset=utf-8\r\n'
         self.body = body
         self.status = status
 
