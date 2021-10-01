@@ -19,6 +19,7 @@ class HttpServer:
     def startup_server(self):
         sock = self.setup_socket()
 
+        print("ym-http 0.1.0 ~vamoscantar")
         print("serving ym-http on {}:{}".format(self.server_address[0], self.server_address[1]))
         self.connection_handler.startup_message()
 
