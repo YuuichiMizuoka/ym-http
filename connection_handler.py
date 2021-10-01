@@ -1,6 +1,7 @@
 import os
 from socket import socket
 
+from pageconfig import PageConfig
 from helpers import HttpParser, SocketHelper
 from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, NOT_AUTHORIZED
 
@@ -15,6 +16,9 @@ class ConnectionHandler:
 
     def get(self, path, headers) -> Response:
         raise NotImplemented
+
+    def unknown_http_method(self, method, path, headers) -> Response:
+        return self.e_405()
 
     def e_405(self) -> Response:
         return Response(METHOD_NOT_ALLOWED, open(self.error_pages + "405.html", 'rb').read())
@@ -38,7 +42,7 @@ class ConnectionHandler:
             except PermissionError:
                 return self.e_401()
         else:
-            return self.e_405()
+            return self.unknown_http_method(method, path, headers)
 
     def handle_connection(self, connection: socket, client_address):
         try:
@@ -73,72 +77,54 @@ class ConfiguredConnectionHandler(ConnectionHandler):
 
         if config is None:
             config = self.read_config()
-        self.page_config = self.parse_config(config)
+        self.page_config = PageConfig(config)
         self.list_dir = True
 
     def read_config(self):
         return open(self.project_folder + "conf" + os.sep + "ym-http.conf", 'rb').read().decode("utf-8")
 
-    def parse_config(self, config):
-        config = config.replace("\r", "").split("\n")
-
-        parsed_config = dict()
-        for line in config:
-            delimiter_index = line.index(":")
-            http_path = line[:delimiter_index]
-            dir_path = line[delimiter_index + 1:]
-
-            # simple way of making the path work for both unix and windows, no matter how you enter it
-            dir_path = dir_path.replace("\\", os.sep).replace("/", os.sep)
-
-            parsed_config[http_path] = dir_path
-
-        return parsed_config
-
     def startup_message(self):
         print("delivering static content: ")
-        for c in self.page_config.keys():
-            print("\t\"" + c + "\" mapped to \"" + self.page_config[c] + "\"")
+        for c in self.page_config.config_lines:
+            print("\t\"" + c.path + "\" mapped to \"" + c.target + "\"")
 
     def get(self, path, headers) -> Response:
         path = path.replace("%20", " ")  # TODO: better (real) http path encoding decoder
 
-        for configured_path in self.page_config.keys():
-            if path.startswith(configured_path):
-                # TODO: better replace (e.g. index.html vs order structure)
-                new_path = path.replace(configured_path, '', 1)
+        config_line = self.page_config.find_configured_line(path)
+        file_path = config_line.target + path.replace(config_line.path, '', 1)
 
-                file_path = self.page_config[configured_path] + new_path
+        if os.path.isdir(file_path):
+            return self._create_directory_response(path, file_path)
 
-                if os.path.isdir(file_path):
-                    return self._create_directory_response(file_path)
+        if os.path.isfile(file_path):
+            return self._create_file_response(file_path)
 
-                if os.path.isfile(file_path):
-                    return self._create_file_response(file_path)
+        raise FileNotFoundError("No such file or directory: " + file_path)
 
-                raise FileNotFoundError("No such file or directory: " + file_path)
+    def unknown_http_method(self, method, path, headers) -> Response:
+        return self.e_405()
 
-        raise FileNotFoundError
-
-    def _create_directory_response(self, file_path):
+    def _create_directory_response(self, path, file_path):
         if os.path.isfile(file_path + "index.html"):
             return self._create_file_response(file_path + "index.html")
 
         if self.list_dir:
-            return self._create_folder_listing_response(file_path)
+            return self._create_folder_listing_response(path, file_path)
 
         raise PermissionError("folder listing disabled")
 
     def _create_file_response(self, file_path):
         return Response(OK, open(file_path, 'rb').read())
 
-    def _create_folder_listing_response(self, folder_path):
+    def _create_folder_listing_response(self, path, folder_path):
         dir_listing = os.listdir(folder_path)
 
         dir_listing_html = b'<html><meta charset="utf-8"><body>Directory Listing: <br>'
-        for file in dir_listing:
-            f = bytes(file, 'utf-8')
-            dir_listing_html += b'<a href="./' + f + b'">' + f + b'</a><br>'
+        for file_name in dir_listing:
+            f = bytes(file_name, 'utf-8')
+            p = bytes(path, 'utf-8')
+            dir_listing_html += b'<a href="' + p + b'/' + f + b'">' + f + b'</a><br>'
 
         dir_listing_html += b'</body></html>'
         return Response(OK, dir_listing_html)
