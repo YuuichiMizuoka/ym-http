@@ -18,6 +18,14 @@ class HttpParser:
         return method, path, protocol
 
     @staticmethod
+    def validate_http_preamble(preamble):
+        if "/.." in preamble or "../" in preamble:
+            raise ValueError("invalid characters in preamble (possible backtracking attack)")
+
+        if "%7F" in preamble or "%7f" in preamble:
+            raise ValueError("invalid characters in preamble")
+
+    @staticmethod
     def parse_headers(headers: str):
         pass
 

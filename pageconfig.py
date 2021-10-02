@@ -32,14 +32,14 @@ class PageConfig:
         if return_type not in ("FS", "RP"):
             raise ValueError("illegal return type configuration")
 
-        auth_provider = AuthProvider.determine_auth_provider(values[3])
+        auth_provider = AuthProvider.determine_auth_provider(values[3:])
 
         return ConfigLine(path, target, return_type, auth_provider)
 
 
 class ConfigLine:
 
-    def __init__(self, path, target, return_type, auth_provider):
+    def __init__(self, path, target, return_type, auth_provider: AuthProvider):
         self.path = path
         self.target = target
         self.return_type = return_type

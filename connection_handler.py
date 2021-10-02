@@ -30,19 +30,7 @@ class ConnectionHandler:
         return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read())
 
     def e_500(self) -> Response:
-        return Response(INTERNAL_SERVER_ERROR)
-
-    def evaluate(self, method, path, headers) -> Response:
-        if method == "GET":
-            try:
-                return self.get(path, headers)
-            except FileNotFoundError as e:
-                print(e)
-                return self.e_404()
-            except PermissionError:
-                return self.e_401()
-        else:
-            return self.unknown_http_method(method, path, headers)
+        return Response(INTERNAL_SERVER_ERROR, open(self.error_pages + "500.html", 'rb').read())
 
     def handle_connection(self, connection: socket, client_address):
         try:
@@ -64,7 +52,25 @@ class ConnectionHandler:
         headers = SocketHelper.receive_until_char_sequence(connection, b'\r\n\r\n', self.max_body - len(preamble))
         header_map = HttpParser.parse_headers(headers)
 
+        HttpParser.validate_http_preamble(preamble)
+
         return method, path, header_map
+
+    def evaluate(self, method, path, headers) -> Response:
+        self.firewall_check(method, path, headers)
+        if method == "GET":
+            try:
+                return self.get(path, headers)
+            except FileNotFoundError as e:
+                print(e)
+                return self.e_404()
+            except PermissionError:
+                return self.e_401()
+        else:
+            return self.unknown_http_method(method, path, headers)
+
+    def firewall_check(self, method, path, headers):
+        pass
 
     def startup_message(self):
         pass
@@ -104,6 +110,11 @@ class ConfiguredConnectionHandler(ConnectionHandler):
 
     def unknown_http_method(self, method, path, headers) -> Response:
         return self.e_405()
+
+    def firewall_check(self, method, path, headers):
+        config_line = self.page_config.find_configured_line(path)
+        if not config_line.auth_provider.is_authorized(path, headers):
+            raise PermissionError("auth provider not authorized")
 
     def _create_directory_response(self, path, file_path):
         if os.path.isfile(file_path + "index.html"):
