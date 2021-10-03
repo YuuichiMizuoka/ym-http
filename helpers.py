@@ -27,7 +27,17 @@ class HttpParser:
 
     @staticmethod
     def parse_headers(headers: str):
-        pass
+        header_list = headers.split('\r\n')
+        header_map = {}
+
+        for header_entry in header_list:
+            if header_entry == '':
+                continue
+
+            split_header = header_entry.split(': ')
+            header_map[split_header[0]] = split_header[1]
+
+        return header_map
 
 
 class SocketHelper:
