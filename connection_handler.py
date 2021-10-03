@@ -124,8 +124,8 @@ class ConfiguredConnectionHandler(ConnectionHandler):
             raise PermissionError("auth provider not authorized")
 
     def _create_directory_response(self, path, file_path):
-        if os.path.isfile(file_path + "index.html"):
-            return self._create_file_response(file_path + "index.html")
+        if os.path.isfile(self.join_paths(file_path, "index.html")):
+            return self._create_file_response(self.join_paths(file_path, "index.html"))
 
         if self.list_dir:
             return self._create_folder_listing_response(path, file_path)
@@ -140,9 +140,17 @@ class ConfiguredConnectionHandler(ConnectionHandler):
 
         dir_listing_html = b'<html><meta charset="utf-8"><body>Directory Listing: <br>'
         for file_name in dir_listing:
-            f = bytes(file_name, 'utf-8')
-            p = bytes(path, 'utf-8')
-            dir_listing_html += b'<a href="' + p + b'/' + f + b'">' + f + b'</a><br>'
+            file_name_b = bytes(file_name, 'utf-8')
+
+            link_path = self.join_paths(path, file_name)
+            link_path_b = bytes(link_path, 'utf-8')
+
+            dir_listing_html += b'<a href="' + link_path_b + b'">' + file_name_b + b'</a><br>'
 
         dir_listing_html += b'</body></html>'
         return Response(OK, dir_listing_html)
+
+    def join_paths(self, path1, path2):
+        if path1.endswith('/'):
+            return path1 + path2
+        return path1 + '/' + path2
