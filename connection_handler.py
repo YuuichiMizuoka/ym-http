@@ -1,8 +1,8 @@
 import os
 from socket import socket
 
-from pageconfig import PageConfig
 from helpers import HttpParser, SocketHelper
+from pageconfig import PageConfig
 from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, NOT_AUTHORIZED
 
 
@@ -26,8 +26,8 @@ class ConnectionHandler:
     def e_404(self) -> Response:
         return Response(NOT_FOUND, open(self.error_pages + "404.html", 'rb').read())
 
-    def e_401(self) -> Response:
-        return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read())
+    def e_401(self, additional_headers=[]) -> Response:
+        return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read(), additional_headers)
 
     def e_500(self) -> Response:
         return Response(INTERNAL_SERVER_ERROR, open(self.error_pages + "500.html", 'rb').read())
@@ -57,20 +57,27 @@ class ConnectionHandler:
         return method, path, header_map
 
     def evaluate(self, method, path, headers) -> Response:
-        self.firewall_check(method, path, headers)
+        try:
+            self.evaluate_firewall(method, path, headers)
+        except PermissionError:
+            return self.e_401(["WWW-Authenticate: Basic " + path])
+
+        try:
+            return self.evaluate_http_method(method, path, headers)
+        except FileNotFoundError as e:
+            print(e)
+            return self.e_404()
+        except PermissionError:
+            return self.e_401()
+
+    def evaluate_firewall(self, method, path, headers):
+        pass
+
+    def evaluate_http_method(self, method, path, headers) -> Response:
         if method == "GET":
-            try:
-                return self.get(path, headers)
-            except FileNotFoundError as e:
-                print(e)
-                return self.e_404()
-            except PermissionError:
-                return self.e_401()
+            return self.get(path, headers)
         else:
             return self.unknown_http_method(method, path, headers)
-
-    def firewall_check(self, method, path, headers):
-        pass
 
     def startup_message(self):
         pass
@@ -111,7 +118,7 @@ class ConfiguredConnectionHandler(ConnectionHandler):
     def unknown_http_method(self, method, path, headers) -> Response:
         return self.e_405()
 
-    def firewall_check(self, method, path, headers):
+    def evaluate_firewall(self, method, path, headers):
         config_line = self.page_config.find_configured_line(path)
         if not config_line.auth_provider.is_authorized(path, headers):
             raise PermissionError("auth provider not authorized")

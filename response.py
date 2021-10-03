@@ -11,14 +11,19 @@ class HttpStatus:
 
 class Response:
 
-    def __init__(self, status: HttpStatus, body: bytes = b'', headers: bytes = b'Server: ym-http\r\n'):
+    def __init__(self, status: HttpStatus, body: bytes = b'', headers: [str] = []):
         self.headers = headers
         self.body = body
         self.status = status
 
     def to_bytes(self) -> bytes:
+        byte_headers = b'Server: ym-http\r\n'
+
+        for header in self.headers:
+            byte_headers += bytes(header, "UTF-8") + b'\r\n'
+
         preamble = bytes(PROTOCOL + SP + str(self.status.status_code) + SP + self.status.reason_message, 'UTF-8')
-        return preamble + b'\r\n' + self.headers + b'\r\n' + self.body
+        return preamble + b'\r\n' + byte_headers + b'\r\n' + self.body
 
 
 # HTTP STATUS CODES
