@@ -11,15 +11,15 @@ class AuthProvider:
         if auth_provider[0] == "NO_AUTH":
             return NoAuthProvider()
         if auth_provider[0] == "BASIC":
-            return BasicAuthProvider(auth_provider[1])
+            return BasicAuthProvider(''.join(auth_provider[1:]))
 
         raise ValueError("illegal auth provider set")
 
 
 class BasicAuthProvider(AuthProvider):
 
-    def __init__(self, allowed_basic_values):
-        self.allowed_basic_values = allowed_basic_values.replace('[', '').replace(']', '').split(',')
+    def __init__(self, past_auth_config):
+        self.allowed_basic_values = past_auth_config.replace('[', '').replace(']', '').replace(' ', '').split(',')
 
     def is_authorized(self, path, headers):
         if "Authorization" not in headers:

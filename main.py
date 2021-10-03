@@ -23,7 +23,7 @@ def determine_config():
         potential_path = potential_path + os.sep
 
     validate_path(potential_path)
-    return "/:" + potential_path
+    return "/ " + potential_path + " FS NO_AUTH"
 
 
 def main():
