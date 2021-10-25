@@ -1,7 +1,7 @@
 import os
 from socket import socket
 
-from helpers import HttpParser, SocketHelper
+from helpers import HttpParser, SocketHelper, UrlParser
 from pageconfig import PageConfig
 from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, NOT_AUTHORIZED
 
@@ -102,8 +102,7 @@ class ConfiguredConnectionHandler(ConnectionHandler):
             print("\t\"" + c.path + "\" mapped to \"" + c.target + "\"")
 
     def get(self, path, headers) -> Response:
-        path = path.replace("%20", " ")  # TODO: better (real) http path encoding decoder
-
+        path = UrlParser.decode_url(path)
         config_line = self.page_config.find_configured_line(path)
         file_path = config_line.target + path.replace(config_line.path, '', 1)
 
