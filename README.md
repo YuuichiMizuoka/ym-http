@@ -53,7 +53,8 @@ values (this will be replaced with hashes in the future). p.e:
 - simple one line start to deliver a single directory
 - simple configuration for more complex path/folder mappings
 - basic auth, separately configurable for each mapping
-- basic header support in response object (currently just Server and www-authenticated, but its a start)
+- basic headers in response object (currently just Server and www-authenticated, but it's a start)
+- url encoding (percent encoding), so the server url can contain encoded non-ascii characters
 
 ## TODO (maybe)
 
@@ -65,3 +66,4 @@ Some things that would be fun to experiment with in the future:
 - threading
 - Content-Type Header (how do you find out what encoding a file has, oh god)
 - Range Header (useful when trying to download big files or for streaming video)
+- support url parameters (? parameters should not be interpreted as file names)
