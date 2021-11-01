@@ -26,7 +26,7 @@ class ConnectionHandler:
     def e_404(self) -> Response:
         return Response(NOT_FOUND, open(self.error_pages + "404.html", 'rb').read())
 
-    def e_401(self, additional_headers=[]) -> Response:
+    def e_401(self, additional_headers=()) -> Response:
         return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read(), additional_headers)
 
     def e_500(self) -> Response:
@@ -150,6 +150,4 @@ class ConfiguredConnectionHandler(ConnectionHandler):
         return Response(OK, dir_listing_html)
 
     def join_paths(self, path1, path2):
-        if path1.endswith('/'):
-            return path1 + path2
-        return path1 + '/' + path2
+        return path1 + path2 if path1.endswith('/') else path1 + '/' + path2
