@@ -1,7 +1,7 @@
 import os
 from socket import socket
 
-from helpers import HttpParser, SocketHelper
+from helpers import HttpParser, SocketHelper, UrlParser
 from pageconfig import PageConfig
 from response import Response, INTERNAL_SERVER_ERROR, OK, METHOD_NOT_ALLOWED, NOT_FOUND, NOT_AUTHORIZED
 
@@ -26,7 +26,7 @@ class ConnectionHandler:
     def e_404(self) -> Response:
         return Response(NOT_FOUND, open(self.error_pages + "404.html", 'rb').read())
 
-    def e_401(self, additional_headers=[]) -> Response:
+    def e_401(self, additional_headers=()) -> Response:
         return Response(NOT_AUTHORIZED, open(self.error_pages + "401.html", 'rb').read(), additional_headers)
 
     def e_500(self) -> Response:
@@ -102,8 +102,7 @@ class ConfiguredConnectionHandler(ConnectionHandler):
             print("\t\"" + c.path + "\" mapped to \"" + c.target + "\"")
 
     def get(self, path, headers) -> Response:
-        path = path.replace("%20", " ")  # TODO: better (real) http path encoding decoder
-
+        path = UrlParser.decode_url(path)
         config_line = self.page_config.find_configured_line(path)
         file_path = config_line.target + path.replace(config_line.path, '', 1)
 
@@ -151,6 +150,4 @@ class ConfiguredConnectionHandler(ConnectionHandler):
         return Response(OK, dir_listing_html)
 
     def join_paths(self, path1, path2):
-        if path1.endswith('/'):
-            return path1 + path2
-        return path1 + '/' + path2
+        return path1 + path2 if path1.endswith('/') else path1 + '/' + path2

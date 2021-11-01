@@ -11,7 +11,7 @@ class HttpStatus:
 
 class Response:
 
-    def __init__(self, status: HttpStatus, body: bytes = b'', headers: [str] = []):
+    def __init__(self, status: HttpStatus, body: bytes = b'', headers: [str] = ()):
         self.headers = headers
         self.body = body
         self.status = status
