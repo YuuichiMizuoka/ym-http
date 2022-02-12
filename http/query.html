@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome! - http default landing page</title>
+    <script>
+		function readAndSetQParameter() {
+            const q = new URLSearchParams(window.location.search).get('q');
+            const stripped_q = strip(q);
+            document.getElementById('param-value').innerHTML = stripped_q;
+		}
+
+		function strip(html){
+   			let doc = new DOMParser().parseFromString(html, 'text/html');
+   			return doc.body.textContent || "";
+		}
+
+    </script>
+</head>
+<body onload="readAndSetQParameter()">
+    <h1>Hòla n.n</h1><br>
+
+    This page tests if the server can handle query params correctly!</br></br>
+
+    If you called this page with a ? afterwards thats already a good sign xP </br>
+    If you have JavaScript enabled you should also see the value of the "q" param here
+    (html gets stripped for security reasons):</br>
+
+    <p style="color: green" id="param-value"></p>
+    </p>
+</body>
+</html>

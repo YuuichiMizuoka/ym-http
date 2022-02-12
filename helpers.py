@@ -13,9 +13,10 @@ class HttpParser:
             return
 
         method = sp_preamble[0]
-        path = sp_preamble[1]
+        location = sp_preamble[1]
         protocol = sp_preamble[2]
-        return method, path, protocol
+        return method, location, protocol
+
 
     @staticmethod
     def validate_http_preamble(preamble):
@@ -43,11 +44,19 @@ class HttpParser:
 class UrlParser:
 
     @staticmethod
-    def decode_url(url: str):
-        return UrlParser.decode_utf8_encoded_characters(url)
+    def parse_location(location: str):
+        path, *query = location.split('?', 1)
+        query = query[0] if len(query) != 0 else None
+        return path, query
 
     @staticmethod
-    def decode_utf8_encoded_characters(url: str):
+    def decode_location(location: str):
+        path, query = UrlParser.parse_location(location)
+        decoded_path = UrlParser.decode_utf8_encoded_path(path)
+        return decoded_path, query
+
+    @staticmethod
+    def decode_utf8_encoded_path(url: str):
         while UrlParser._has_utf8_segment(url):
             encoded_segment = UrlParser._get_next_utf8_segment(url)
             decoded_segment = UrlParser._decode_utf8_segment(encoded_segment)

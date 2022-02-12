@@ -14,10 +14,10 @@ class ConnectionHandler:
         self.error_pages = self.project_folder + "resources" + os.sep + "error_pages" + os.sep
         self.max_body = 16384  # 16KiB
 
-    def get(self, path, headers) -> Response:
+    def get(self, location, headers) -> Response:
         raise NotImplemented
 
-    def unknown_http_method(self, method, path, headers) -> Response:
+    def unknown_http_method(self, method, location, headers) -> Response:
         return self.e_405()
 
     def e_405(self) -> Response:
@@ -47,37 +47,37 @@ class ConnectionHandler:
 
     def receive_next_http_request(self, connection: socket):
         preamble = SocketHelper.receive_until_char_sequence(connection, b'\r\n', self.max_body)
-        method, path, protocol = HttpParser.parse_preamble(preamble)
+        method, location, protocol = HttpParser.parse_preamble(preamble)
 
         headers = SocketHelper.receive_until_char_sequence(connection, b'\r\n\r\n', self.max_body - len(preamble))
         header_map = HttpParser.parse_headers(headers)
 
         HttpParser.validate_http_preamble(preamble)
 
-        return method, path, header_map
+        return method, location, header_map
 
-    def evaluate(self, method, path, headers) -> Response:
+    def evaluate(self, method, location, headers) -> Response:
         try:
-            self.evaluate_firewall(method, path, headers)
+            self.evaluate_firewall(method, location, headers)
         except PermissionError:
-            return self.e_401(["WWW-Authenticate: Basic " + path])
+            return self.e_401(["WWW-Authenticate: Basic " + location])
 
         try:
-            return self.evaluate_http_method(method, path, headers)
+            return self.evaluate_http_method(method, location, headers)
         except FileNotFoundError as e:
             print(e)
             return self.e_404()
         except PermissionError:
             return self.e_401()
 
-    def evaluate_firewall(self, method, path, headers):
+    def evaluate_firewall(self, method, location, headers):
         pass
 
-    def evaluate_http_method(self, method, path, headers) -> Response:
+    def evaluate_http_method(self, method, location, headers) -> Response:
         if method == "GET":
-            return self.get(path, headers)
+            return self.get(location, headers)
         else:
-            return self.unknown_http_method(method, path, headers)
+            return self.unknown_http_method(method, location, headers)
 
     def startup_message(self):
         pass
@@ -90,6 +90,7 @@ class ConfiguredConnectionHandler(ConnectionHandler):
 
         if config is None:
             config = self.read_config()
+
         self.page_config = PageConfig(config)
         self.list_dir = True
 
@@ -101,8 +102,8 @@ class ConfiguredConnectionHandler(ConnectionHandler):
         for c in self.page_config.config_lines:
             print("\t\"" + c.path + "\" mapped to \"" + c.target + "\"")
 
-    def get(self, path, headers) -> Response:
-        path = UrlParser.decode_url(path)
+    def get(self, location, headers) -> Response:
+        path, query = UrlParser.decode_location(location)
         config_line = self.page_config.find_configured_line(path)
         file_path = config_line.target + path.replace(config_line.path, '', 1)
 
@@ -114,12 +115,12 @@ class ConfiguredConnectionHandler(ConnectionHandler):
 
         raise FileNotFoundError("No such file or directory: " + file_path)
 
-    def unknown_http_method(self, method, path, headers) -> Response:
+    def unknown_http_method(self, method, location, headers) -> Response:
         return self.e_405()
 
-    def evaluate_firewall(self, method, path, headers):
-        config_line = self.page_config.find_configured_line(path)
-        if not config_line.auth_provider.is_authorized(path, headers):
+    def evaluate_firewall(self, method, location, headers):
+        config_line = self.page_config.find_configured_line(location)
+        if not config_line.auth_provider.is_authorized(location, headers):
             raise PermissionError("auth provider not authorized")
 
     def _create_directory_response(self, path, file_path):
